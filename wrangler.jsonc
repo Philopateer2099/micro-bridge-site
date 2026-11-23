@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // A static site: Cloudflare serves the files in dist/ and runs no code of ours.
+  // Cloudflare Pages is now part of Workers, so this is a Worker with static assets only.
+  "name": "micro-bridge-site",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./dist",
+    // dist/og.html is served at /og; unknown paths get dist/404.html with a 404 status.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  // Cloudflare creates the DNS record and the certificate for this name on deploy.
+  "routes": [{ "pattern": "microbridge.philopateer.dev", "custom_domain": true }],
+  // One address only: no *.workers.dev copy and no preview copies for search engines to find.
+  "workers_dev": false,
+  "preview_urls": false
+}

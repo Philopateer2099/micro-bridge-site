@@ -15,7 +15,9 @@ const {
   noindex = false,
   bare = false,
 } = Astro.props;
-const canonical = new URL(Astro.url.pathname, SITE.url).href;
+// build.format "file" gives paths like /index.html and /og.html; the addresses people see are / and /og.
+const path = Astro.url.pathname.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, "");
+const canonical = new URL(path, SITE.url).href;
 const ogImage = new URL("/og.png", SITE.url).href;
 
 const software = {

@@ -14,6 +14,12 @@ bun run build      # writes dist/
 bun run check      # type check
 ```
 
+## Deploy
+
+`bun run deploy` builds the site and uploads `dist/` to Cloudflare, which serves it at
+https://microbridge.philopateer.dev as static files (a Worker with no code; see `wrangler.jsonc`).
+Run `bunx wrangler login` once first. Why it is set up this way: `docs/decisions.md`, D-002.
+
 ## Where things are
 
 - `src/pages/index.astro`: the page. Every claim on it comes from the MicroBridge README; change
