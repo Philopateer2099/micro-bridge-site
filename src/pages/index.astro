@@ -1,0 +1,304 @@
+---
+import Pad from "../components/Pad.astro";
+import Base from "../layouts/Base.astro";
+import { doc, SITE } from "../site";
+
+const lights = [
+  ["white", "White", "Idle. Waiting for your next prompt."],
+  ["blue", "Blue", "Working."],
+  ["amber", "Amber", "Needs you: a permission prompt or a question."],
+  ["green", "Green", "Done, and you have not looked yet."],
+  ["red", "Red", "The turn failed."],
+  ["pulse", "Slow pulse", "The session on screen in the Claude app."],
+];
+
+const controls = [
+  ["Agent Keys", "One per session", "A session takes a key the first time it does something, in the Claude app or in a terminal. A tap clears green or red and shows that session. Hold a key to forget its session."],
+  ["Yes, No", "Answer without the mouse", "Press the session’s next-step button: “Allow once”, “Deny”, or a question card’s Next, Submit or Skip. In a terminal: Return or Esc."],
+  ["Dial", "Question cards", "Turn to move between answers, press to tick or submit. Elsewhere it is Up, Down and Return. Hold it to open the config file."],
+  ["Stick", "Move around", "Permission mode, previous and next session, the sidebar. Up and down can scroll what is under the pointer, and left and right move the pointer between panes."],
+  ["Fast, Fork, Send", "One press each", "Fast types /fast. Fork types /branch or starts a new chat. Send sends the message."],
+  ["Mic", "Hold to talk", "The wide key is push to talk."],
+  ["Six keys, more sessions", "The urgent ones win", "The six most urgent sessions hold the keys: needs you first, then done or failed, then working, then idle. The session on screen keeps its key."],
+  ["Pins and memory", "Keys stay put", "Pin a session and it keeps its key, however urgent the others are. A session that ended keeps its key, and a tap opens it again. Keys survive a restart."],
+];
+
+const steps = [
+  ["Get the code.", "You need macOS 14 or later and Swift 6: Xcode 16, or just the Command Line Tools.", "git clone https://github.com/Philopateer2099/micro-bridge.git && cd micro-bridge"],
+  ["Make a signing identity, once.", "Optional. A local certificate, so macOS keeps the Input Monitoring grant when you rebuild.", "scripts/make-cert"],
+  ["Build and install.", "MicroBridge.app goes to ~/Applications and starts at login.", "scripts/install"],
+  ["Tell Claude Code to report to it.", "Adds one hook to ~/.claude/settings.json. It backs the file up first, or creates it if there is none.", "scripts/claude-hooks install"],
+  ["Give it access.", "Shows Input Monitoring and Accessibility, and asks for what is missing.", "scripts/micro access"],
+  ["Open the window.", "Its Setup screen checks each step and says what is still missing.", "open ~/Applications/MicroBridge.app"],
+];
+
+const faq = [
+  ["Is this made by OpenAI, Work Louder or Anthropic?", "No. MicroBridge is an independent, open source project. None of them made, endorsed or support it. You need your own Codex Micro."],
+  ["Can I still use the pad with ChatGPT?", "Yes. Taps on the pad’s touch sensor pass it to ChatGPT and back: two taps out of the box, one tap with a two-layer profile. After a tap, ChatGPT can take up to 10 seconds to pick the pad up."],
+  ["Does it work on Windows or Linux?", "No. It is built for macOS 14 or later, and it presses buttons in the Claude app through the macOS Accessibility API."],
+  ["Does it work over Bluetooth?", "Untested. It was built and tested with the pad on USB."],
+  ["Does anything leave my Mac?", "No. The bridge makes no network connections. Claude Code’s hook and the bridge talk over a local Unix socket."],
+  ["Is there a download?", "Not yet. Build it from source with the six commands above. A signed download needs an Apple Developer ID, and it is planned."],
+  ["What if a Claude app update breaks a key?", "The bridge finds the Claude app’s buttons by their accessibility labels, so an update can rename one. The config file lets you point a key at the new name before a release does."],
+  ["What about sessions in a terminal?", "They get a key and a light too. A tap brings the terminal forward, not the exact tab."],
+];
+
+const github = `<svg viewBox="0 0 16 16" aria-hidden="true" width="18" height="18"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>`;
+---
+
+<Base>
+  <section class="hero">
+    <div class="wrap hero-in">
+      <div class="hero-copy">
+        <p class="eyebrow"><b>Unofficial</b><span>macOS 14+</span><span>Open source</span></p>
+        <h1>Your Codex Micro, wired to <em>Claude&nbsp;Code</em>.</h1>
+        <p class="lede">
+          Six keys follow six Claude Code sessions and light by what each one is doing. Tap a key to open its
+          session. Approve, decline and answer question cards without reaching for the mouse.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href={SITE.repo}><Fragment set:html={github} /><span>Get it on GitHub</span></a>
+          <a class="btn" href="#install">Install in six commands</a>
+        </div>
+        <p class="fine">Free, MIT licensed. Not affiliated with OpenAI, Work Louder or Anthropic.</p>
+      </div>
+      <div class="hero-pad">
+        <Pad mode="demo" />
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <ul class="facts" aria-label="In numbers">
+      <li><b>6</b><span>sessions at a glance, one per key</span></li>
+      <li><b>49</b><span>commands any control can run</span></li>
+      <li><b>5</b><span>methods it sends the pad. Nothing writes its storage</span></li>
+      <li><b>0</b><span>network connections</span></li>
+    </ul>
+  </div>
+
+  {SITE.demo && (
+    <section class="sec" id="demo">
+      <div class="wrap">
+        <video class="demo-video" src={SITE.demo.src} poster={SITE.demo.poster} controls playsinline preload="none"></video>
+      </div>
+    </section>
+  )}
+
+  <section class="sec" id="lights">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">01 / Lights</p>
+        <h2>One look tells you which session <em>wants you</em>.</h2>
+      </header>
+      <ul class="lights">
+        {lights.map(([c, name, text]) => (
+          <li>
+            <i class:list={["lamp", { pulse: c === "pulse" }]} style={`--c: var(--l-${c === "pulse" ? "white" : c})`}></i>
+            <div><b>{name}</b><span>{text}</span></div>
+          </li>
+        ))}
+      </ul>
+      <p class="aside">The colors are yours to change, with the brightness and the pulse, in the window or the config file.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="controls">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">02 / Controls</p>
+        <h2>Every key, the dial and the stick do <em>something useful</em>.</h2>
+      </header>
+      <div class="cards">
+        {controls.map(([what, title, text]) => (
+          <article class="card">
+            <p class="tag">{what}</p>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+      <p class="aside">
+        Every control can be rebound to any of 49 named commands, a key combination, typed text, a shell command or something
+        to open, on press, release, double tap or hold. <a href={doc("docs/configuration.md")}>All of them</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="window">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">03 / The window</p>
+        <h2>Set it up and rebind it <em>without a text editor</em>.</h2>
+      </header>
+      <figure class="shot">
+        <img src="/window-pad.png" width="1080" height="800" loading="lazy" decoding="async"
+          alt="The MicroBridge window: the pad's six Agent Keys as the pad shows them, and the session on each key." />
+        <figcaption>The Pad screen. The sessions in the pictures are made up.</figcaption>
+      </figure>
+      <div class="shot-row">
+        <figure class="shot">
+          <img src="/window-keys.png" width="1080" height="800" loading="lazy" decoding="async"
+            alt="The keycap dialog: every command as a keycap, with one picked and not saved yet." />
+          <figcaption>Keys: click a key on the drawing, pick a keycap, Save.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="/window-commands.png" width="1080" height="800" loading="lazy" decoding="async"
+            alt="The Commands screen: the five steps Approve tries in the Claude app." />
+          <figcaption>Commands: what each one does in the Claude app and in a terminal.</figcaption>
+        </figure>
+      </div>
+      <p class="aside">
+        Six screens: Pad, Keys, Commands, Lights, Behavior and Setup. The window writes the same config file you can edit by
+        hand, and the bridge picks a change up within a second.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="chatgpt">
+    <div class="wrap two">
+      <header class="sec-head">
+        <p class="num">04 / ChatGPT</p>
+        <h2>ChatGPT can still <em>have the pad</em>.</h2>
+      </header>
+      <div class="prose">
+        <p>
+          The Codex Micro ships working with ChatGPT and Codex, and MicroBridge shares it rather than taking it over.
+          <strong>Taps on the pad’s touch sensor</strong>, its bottom-left edge, pass the pad to ChatGPT and back.
+        </p>
+        <ul class="ticks">
+          <li><b>Two taps</b> out of the box. Turn on “Two taps pass the pad to ChatGPT” in the window.</li>
+          <li><b>One tap</b> with a two-layer profile in Work Louder Input. The layer the pad is on says who has it.</li>
+          <li>While ChatGPT has the pad, MicroBridge lights nothing and acts on no key. After a tap, ChatGPT can take up to 10 seconds to pick it up.</li>
+          <li>Optional: MicroBridge Helper keeps ChatGPT from hearing the keys while it sits behind another app.</li>
+        </ul>
+        <p><a href={`${SITE.repo}#passing-the-pad-to-chatgpt`}>How to set it up</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">05 / How it works</p>
+        <h2>A small daemon between Claude Code <em>and the pad</em>.</h2>
+      </header>
+      <ol class="flow">
+        <li class="node"><b>Claude Code</b><p>Runs a hook on each event: a prompt, a tool call, a permission request, the end of a turn.</p></li>
+        <li class="wire" aria-hidden="true"><span>hook, socket</span></li>
+        <li class="node core"><b>MicroBridge</b><p>Gives each session a key and a light. Turns a press into a key typed or a button pressed in the app in front.</p></li>
+        <li class="wire" aria-hidden="true"><span>USB HID</span></li>
+        <li class="node"><b>Codex Micro</b><p>Shows the lights. Sends its keys, dial and stick back.</p></li>
+      </ol>
+      <p class="aside">
+        Swift, no third-party code at run time. The hook reports and exits without printing anything, so tool calls are not slowed down.
+        The design and its dated build log are <a href={doc("docs/development-log.md")}>in the repo</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="install">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">06 / Install</p>
+        <h2>Six commands, from clone to <em>first light</em>.</h2>
+      </header>
+      <ol class="steps">
+        {steps.map(([title, note, cmd]) => (
+          <li>
+            <div class="step-text"><p>{title}</p><small>{note}</small></div>
+            <div class="cmd"><code>{cmd}</code><button type="button" class="copy" data-copy={cmd}>Copy</button></div>
+          </li>
+        ))}
+      </ol>
+      <div class="notes">
+        <p>
+          <strong>Prefer a plugin?</strong> In a Claude Code session, run
+          <code>/plugin install micro-bridge --marketplace Philopateer2099/micro-bridge</code> instead of step 4. Use one or
+          the other.
+        </p>
+        <p>
+          <strong>Pad still dark?</strong> Restart the bridge:
+          <code>launchctl kickstart -k "gui/$(id -u)/local.micro-bridge"</code>. The log is
+          <code>~/Library/Logs/micro-bridge.log</code>.
+        </p>
+        <p><strong>Removing it</strong> takes two commands: <a href={`${SITE.repo}#install`}>the README has them</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="config">
+    <div class="wrap two">
+      <header class="sec-head">
+        <p class="num">07 / Config</p>
+        <h2>Every control is <em>one line</em> in one file.</h2>
+      </header>
+      <div class="prose">
+        <p><strong>Hold the dial</strong> to open the file. Save it, and the pad follows within a second. A broken file is ignored and the last good settings stay.</p>
+        <p>A key can type text, send a key combination, press a button on screen, run a shell command or open a link. The same key can do one thing in the Claude app and another in a terminal.</p>
+<pre class="json" aria-label="An example of the config file"><span class="k">"keys"</span>: {'{'}
+  <span class="k">"ACT06"</span>: <span class="s">"cmd:NEW"</span>,
+  <span class="k">"ACT09"</span>: [<span class="s">"sh:git stash"</span>, <span class="s">"text:stashed\n"</span>],
+  <span class="k">"ACT12"</span>: {'{'} <span class="k">"press"</span>: <span class="s">"key:return"</span>, <span class="k">"hold"</span>: <span class="s">"key:escape"</span> {'}'}
+{'}'},
+<span class="k">"lighting"</span>: {'{'} <span class="k">"colors"</span>: {'{'} <span class="k">"working"</span>: <span class="s">"#304FFE"</span> {'}'} {'}'}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="safety">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="num">08 / Safety</p>
+        <h2>What it touches, and <em>what it leaves alone</em>.</h2>
+      </header>
+      <ul class="safe">
+        <li><b>The pad</b><span>Five methods and no others: read the version and status, set the lights. Nothing writes the pad’s storage or firmware.</span></li>
+        <li><b>The network</b><span>No connections. The hook and the bridge talk over a Unix socket on your Mac.</span></li>
+        <li><b>macOS</b><span>Input Monitoring to read the pad. Accessibility to type keys and press buttons in the app in front.</span></li>
+        <li><b>The code</b><span>Swift, MIT, no third-party code at run time. Read every line before you grant it anything.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec" id="faq">
+    <div class="wrap two">
+      <header class="sec-head">
+        <p class="num">09 / Questions</p>
+        <h2>Before you <em>plug it in</em>.</h2>
+      </header>
+      <div class="faq">
+        {faq.map(([q, a]) => (
+          <details>
+            <summary>{q}</summary>
+            <p>{a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="end">
+    <div class="wrap end-in">
+      <h2>Six sessions, <em>one glance</em>.</h2>
+      <div class="cta">
+        <a class="btn primary" href={SITE.repo}><Fragment set:html={github} /><span>Get it on GitHub</span></a>
+        <a class="btn" href={`${SITE.repo}/issues/new/choose`}>Suggest an idea</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) =>
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? "");
+        button.textContent = "Copied";
+      } catch {
+        button.textContent = "Select it";
+      }
+      setTimeout(() => (button.textContent = "Copy"), 1600);
+    }),
+  );
+</script>

@@ -1,0 +1,183 @@
+---
+// A drawing of the Codex Micro, not to scale. "demo" plays through an example and answers clicks;
+// "still" draws one moment, for the social card.
+type State = "off" | "idle" | "working" | "needs-you" | "done" | "failed";
+interface Props {
+  mode?: "demo" | "still";
+  states?: State[];
+  shown?: number | null;
+}
+const {
+  mode = "demo",
+  states = ["working", "needs-you", "done", "idle", "failed", "off"],
+  shown = 3,
+} = Astro.props;
+const demo = mode === "demo";
+const Key = demo ? "button" : "span";
+const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" });
+---
+
+<figure class:list={["pad-wrap", { demo }]} data-pad={demo ? "" : undefined}>
+  <div class="pad" role="group" aria-label="A drawing of the Codex Micro. The six top keys light by what each Claude Code session is doing.">
+    <Key type={demo ? "button" : undefined} class="dial" data-act="dial" aria-label={demo ? "Dial" : undefined}><span></span></Key>
+    <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 0 }]} {...agent(0)} aria-label={demo ? "Agent Key 1" : undefined}></Key>
+    <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 1 }]} {...agent(1)} aria-label={demo ? "Agent Key 2" : undefined}></Key>
+    <Key type={demo ? "button" : undefined} class="stick" data-act="stick" aria-label={demo ? "Stick" : undefined}><span></span></Key>
+    {[2, 3, 4, 5].map((i) => (
+      <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === i }]} {...agent(i)} aria-label={demo ? `Agent Key ${i + 1}` : undefined}></Key>
+    ))}
+    <Key type={demo ? "button" : undefined} class="key act" data-act="fast">Fast</Key>
+    <Key type={demo ? "button" : undefined} class="key act" data-act="approve" aria-label={demo ? "Approve" : undefined}>Yes</Key>
+    <Key type={demo ? "button" : undefined} class="key act" data-act="decline" aria-label={demo ? "Decline" : undefined}>No</Key>
+    <Key type={demo ? "button" : undefined} class="key act" data-act="fork">Fork</Key>
+    <Key type={demo ? "button" : undefined} class="touch" data-act="touch" aria-label={demo ? "Touch sensor" : undefined}><span></span></Key>
+    <Key type={demo ? "button" : undefined} class="key act wide" data-act="mic">Mic</Key>
+    <Key type={demo ? "button" : undefined} class="key act" data-act="send">Send</Key>
+  </div>
+  {demo && (
+    <figcaption class="readout">
+      <span class="say" data-say>A drawing of the pad. Click the keys.</span>
+      <button type="button" class="pause" data-pause aria-pressed="false">Pause</button>
+    </figcaption>
+  )}
+</figure>
+
+<script>
+  type State = "off" | "idle" | "working" | "needs-you" | "done" | "failed";
+  // Made-up sessions for the example.
+  const NAMES = ["refactor-auth", "landing-page", "flaky-tests", "api-docs", "billing-fix", "release-notes"];
+
+  function init(root: HTMLElement) {
+    const keys = [...root.querySelectorAll<HTMLElement>("[data-ag]")];
+    const act = (name: string) => root.querySelector<HTMLElement>(`[data-act="${name}"]`)!;
+    const say = root.querySelector<HTMLElement>("[data-say]")!;
+    const pause = root.querySelector<HTMLButtonElement>("[data-pause]")!;
+    const dial = root.querySelector<HTMLElement>(".dial span")!;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let turn = 0;
+
+    const get = (i: number) => keys[i].dataset.state as State;
+    const set = (i: number, s: State) => {
+      keys[i].dataset.state = s;
+      if (s !== "off") root.style.setProperty("--last", `var(--l-${s === "needs-you" ? "amber" : s === "done" ? "green" : s === "failed" ? "red" : s === "working" ? "blue" : "white"})`);
+    };
+    const show = (i: number | null) => keys.forEach((k, j) => k.classList.toggle("shown", j === i));
+    const shownKey = () => keys.findIndex((k) => k.classList.contains("shown"));
+    const press = (el: HTMLElement, ms = 180) => {
+      el.classList.add("down");
+      setTimeout(() => el.classList.remove("down"), ms);
+    };
+    const tell = (text: string) => (say.textContent = text);
+    const turnDial = (deg: number) => {
+      turn += deg;
+      dial.style.transform = `rotate(${turn}deg)`;
+    };
+    const key = (i: number) => `Key ${i + 1}, ${NAMES[i]},`;
+
+    // The example: [wait before this step in ms, what happens].
+    const steps: [number, () => void][] = [
+      [500, () => { keys.forEach((_, i) => set(i, "off")); show(null); tell("Six keys. Each one follows a Claude Code session."); }],
+      [1600, () => { set(0, "working"); tell(`${key(0)} is working.`); }],
+      [1200, () => { set(1, "working"); set(2, "working"); tell("Two more sessions start. Each takes the next free key."); }],
+      [1900, () => { set(0, "needs-you"); show(0); tell(`${key(0)} needs you: a permission prompt.`); }],
+      [2200, () => { press(act("approve")); set(0, "working"); tell("Yes presses “Allow once”. Back to work."); }],
+      [2000, () => { set(1, "done"); tell(`${key(1)} is done, and you have not looked yet.`); }],
+      [1800, () => { set(3, "working"); set(2, "failed"); tell(`${key(2)} failed.`); }],
+      [2300, () => { press(keys[1]); set(1, "idle"); show(1); tell("A tap opens key 2’s session. The key on screen pulses."); }],
+      [2600, () => { set(3, "needs-you"); tell(`${key(3)} asks a question.`); }],
+      [1500, () => { turnDial(30); tell("Turn the dial to move between the answers,"); }],
+      [800, () => turnDial(30)],
+      [900, () => { press(act("dial")); set(3, "working"); tell("and press it to pick one."); }],
+      [2100, () => { set(0, "done"); set(4, "working"); tell("A fifth session takes key 5."); }],
+      [2200, () => { press(keys[2], 700); set(2, "off"); tell("Hold a key to forget its session and free the key."); }],
+      [3200, () => {}],
+    ];
+
+    let at = 0;
+    let timer = 0;
+    let wanted = !reduce;
+    const step = () => {
+      steps[at][1]();
+      at = (at + 1) % steps.length;
+      timer = window.setTimeout(step, steps[at][0]);
+    };
+    const run = (on: boolean) => {
+      clearTimeout(timer);
+      if (on) timer = window.setTimeout(step, 400);
+      pause.textContent = wanted ? "Pause" : "Play";
+      pause.setAttribute("aria-pressed", String(!wanted));
+    };
+    let visible = true;
+    const sync = () => run(wanted && visible && !document.hidden);
+
+    pause.addEventListener("click", () => {
+      wanted = !wanted;
+      sync();
+    });
+    // The reader took over: stop the example and answer them.
+    const take = () => {
+      if (wanted) {
+        wanted = false;
+        sync();
+      }
+    };
+
+    keys.forEach((k, i) =>
+      k.addEventListener("click", () => {
+        take();
+        press(k);
+        const s = get(i);
+        if (s === "off") return tell("A dark key does nothing. Bind a key to cmd:NEW to start sessions from the pad.");
+        if (s === "done" || s === "failed") set(i, "idle");
+        show(i);
+        tell(`A tap shows ${NAMES[i]} in the Claude app.`);
+      }),
+    );
+    const answer = (name: string, then: (i: number) => void, says: string) =>
+      act(name).addEventListener("click", () => {
+        take();
+        press(act(name));
+        const i = shownKey();
+        if (i < 0 || get(i) !== "needs-you")
+          return tell(`${says.split(" ")[0]} answers the session on screen, and it is not waiting on you. Tap an amber key first.`);
+        then(i);
+        tell(says);
+      });
+    answer("approve", (i) => set(i, "working"), "Yes presses “Allow once”.");
+    answer("decline", (i) => set(i, "idle"), "No presses “Deny”.");
+    const plain: Record<string, string> = {
+      fast: "Fast types /fast into the session on screen.",
+      fork: "Fork types /branch, or starts a new chat.",
+      mic: "Hold Mic to talk.",
+      send: "Send sends the message.",
+      stick: "The stick: permission mode, previous and next session, the sidebar. It can scroll what is under the pointer instead.",
+      touch: "The touch sensor: taps here pass the pad to ChatGPT and back.",
+    };
+    for (const [name, text] of Object.entries(plain))
+      act(name).addEventListener("click", () => {
+        take();
+        press(act(name));
+        tell(text);
+      });
+    act("dial").addEventListener("click", () => {
+      take();
+      turnDial(30);
+      tell("The dial moves through a question card’s answers and picks one. Elsewhere it is Up, Down and Return.");
+    });
+
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      sync();
+    }).observe(root);
+    document.addEventListener("visibilitychange", sync);
+
+    if (reduce) {
+      (["working", "needs-you", "done", "idle", "failed", "off"] as State[]).forEach((s, i) => set(i, s));
+      show(3);
+      tell("A drawing of the pad. Click the keys.");
+    }
+    sync();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-pad]").forEach(init);
+</script>

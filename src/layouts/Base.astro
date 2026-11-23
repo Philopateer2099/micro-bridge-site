@@ -1,0 +1,115 @@
+---
+import { Font } from "astro:assets";
+import { SITE } from "../site";
+import "../styles/site.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+  bare?: boolean;
+}
+const {
+  title = `${SITE.name}: the Codex Micro for Claude Code`,
+  description = SITE.description,
+  noindex = false,
+  bare = false,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = new URL("/og.png", SITE.url).href;
+
+const software = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: SITE.name,
+  url: SITE.url,
+  description: SITE.description,
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "macOS 14 or later",
+  license: "https://opensource.org/licenses/MIT",
+  codeRepository: SITE.repo,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  author: { "@type": "Person", name: SITE.author, url: SITE.authorUrl },
+  image: ogImage,
+};
+const github = `<svg viewBox="0 0 16 16" aria-hidden="true" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content="#0b0b0c" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MicroBridge: a drawing of the Codex Micro with its six top keys lit, next to the words: Your Codex Micro, wired to Claude Code." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <Font cssVariable="--font-serif" preload />
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-mono" />
+    {!noindex && <script type="application/ld+json" set:html={JSON.stringify(software)} />}
+  </head>
+  <body class:list={{ bare }}>
+    {bare ? <slot /> : (
+      <>
+        <a class="skip" href="#main">Skip to content</a>
+        <header class="bar">
+          <div class="wrap bar-in">
+            <a class="mark" href="/" aria-label="MicroBridge, home">
+              <span class="mark-keys" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              MicroBridge
+            </a>
+            <nav class="nav" aria-label="Sections">
+              <a href="/#lights">Lights</a>
+              <a href="/#controls">Controls</a>
+              <a href="/#chatgpt">ChatGPT</a>
+              <a href="/#install">Install</a>
+              <a href="/#faq">FAQ</a>
+            </nav>
+            <a class="btn small" href={SITE.repo}><Fragment set:html={github} /><span>GitHub</span></a>
+          </div>
+        </header>
+        <main id="main">
+          <slot />
+        </main>
+        <footer class="foot">
+          <div class="wrap foot-in">
+            <div>
+              <a class="mark" href="/">
+                <span class="mark-keys" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                MicroBridge
+              </a>
+              <p class="made">Built by <a href={SITE.authorUrl}>{SITE.author}</a>. MIT licensed.</p>
+            </div>
+            <nav class="foot-links" aria-label="Project">
+              <a href={SITE.repo}>Source on GitHub</a>
+              <a href={`${SITE.repo}/blob/main/docs/configuration.md`}>Configuration</a>
+              <a href={`${SITE.repo}/blob/main/CHANGELOG.md`}>Changelog</a>
+              <a href={`${SITE.repo}/issues`}>Report a problem</a>
+              <a href={`${SITE.repo}/blob/main/SECURITY.md`}>Security</a>
+            </nav>
+            <p class="legal">
+              MicroBridge is an independent project. It is not affiliated with, endorsed by or supported by
+              OpenAI, Work Louder or Anthropic. “Codex Micro”, “ChatGPT”, “Codex” and “Claude” are names of
+              their owners, used here only to say what MicroBridge works with.
+            </p>
+          </div>
+        </footer>
+      </>
+    )}
+  </body>
+</html>

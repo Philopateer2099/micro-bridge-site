@@ -1,0 +1,86 @@
+---
+// The social card, 1200 by 630. `bun run images` takes a picture of it into public/og.png.
+import Pad from "../components/Pad.astro";
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="MicroBridge social card" noindex bare>
+  <div class="og">
+    <div class="og-copy">
+      <p class="mark">
+        <span class="mark-keys" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        MicroBridge
+      </p>
+      <h1>Your Codex Micro, wired to <em>Claude&nbsp;Code</em>.</h1>
+      <p class="og-sub">Six keys, six sessions, lit by what each one is doing.</p>
+      <p class="og-tags"><span>Open source</span><span>macOS</span><span class="u">Unofficial</span></p>
+    </div>
+    <div class="og-pad">
+      <Pad mode="still" states={["working", "needs-you", "done", "idle", "working", "failed"]} shown={null} />
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  body.bare::before {
+    display: none;
+  }
+  .og {
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 470px;
+    align-items: center;
+    gap: 40px;
+    padding: 0 64px 0 76px;
+    background:
+      radial-gradient(circle, #222226 1px, transparent 1.3px) 0 0 / 24px 24px,
+      #0b0b0c;
+  }
+  .og .mark {
+    font-size: 26px;
+    gap: 14px;
+    margin: 0 0 34px;
+  }
+  .og .mark-keys {
+    grid-template-columns: repeat(3, 9px);
+    gap: 3px;
+  }
+  .og .mark-keys i {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+  }
+  .og h1 {
+    font-size: 78px;
+    line-height: 0.98;
+    margin: 0 0 26px;
+  }
+  .og-sub {
+    margin: 0 0 30px;
+    font-size: 26px;
+    color: var(--dim);
+  }
+  .og-tags {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    font: 500 17px/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+  }
+  .og-tags span {
+    padding: 9px 13px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+  }
+  .og-tags .u {
+    color: var(--l-amber);
+    border-color: color-mix(in srgb, var(--l-amber) 45%, transparent);
+  }
+  .og-pad .pad-wrap {
+    --u: 84px;
+  }
+</style>
