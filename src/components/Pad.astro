@@ -1,6 +1,8 @@
 ---
-// A drawing of the Codex Micro, not to scale. "demo" plays through an example and answers clicks;
-// "still" draws one moment, for the social card.
+// A drawing of the Codex Micro from above: a frosted case, a plate with four screws, six clear
+// Agent Keys with a light under each, white command keys with line icons. The drawing and the
+// icons are our own. "demo" plays through an example and answers clicks; "still" draws one
+// moment, for the social card.
 type State = "off" | "idle" | "working" | "needs-you" | "done" | "failed";
 interface Props {
   mode?: "demo" | "still";
@@ -9,34 +11,54 @@ interface Props {
 }
 const {
   mode = "demo",
-  states = ["working", "needs-you", "done", "idle", "failed", "off"],
-  shown = 3,
+  states = ["working", "done", "working", "idle", "off", "off"],
+  shown = null,
 } = Astro.props;
 const demo = mode === "demo";
 const Key = demo ? "button" : "span";
 const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" });
+const label = (text: string) => (demo ? text : undefined);
+
+const paths = {
+  fast: '<path d="M13 3 5 13.5h6L10 21l8-10.5h-6L13 3Z"/>',
+  approve: '<circle cx="12" cy="12" r="8.5"/><path d="m8.4 12.3 2.5 2.5 4.8-5.3"/>',
+  decline: '<circle cx="12" cy="12" r="8.5"/><path d="m9.3 9.3 5.4 5.4m0-5.4-5.4 5.4"/>',
+  fork: '<path d="M3.5 12H8c3.5 0 4.5-5 9.5-5M8 12c3.5 0 4.5 5 9.5 5M15 4l3 3-3 3M15 14l3 3-3 3"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  send: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+};
+const icon = (name: keyof typeof paths) =>
+  `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[name]}</svg>`;
+const row3 = [
+  ["fast", "Fast"],
+  ["approve", "Approve (Yes)"],
+  ["decline", "Decline (No)"],
+  ["fork", "Fork"],
+] as const;
 ---
 
 <figure class:list={["pad-wrap", { demo }]} data-pad={demo ? "" : undefined}>
-  <div class="pad" role="group" aria-label="A drawing of the Codex Micro. The six top keys light by what each Claude Code session is doing.">
-    <Key type={demo ? "button" : undefined} class="dial" data-act="dial" aria-label={demo ? "Dial" : undefined}><span></span></Key>
-    <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 0 }]} {...agent(0)} aria-label={demo ? "Agent Key 1" : undefined}></Key>
-    <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 1 }]} {...agent(1)} aria-label={demo ? "Agent Key 2" : undefined}></Key>
-    <Key type={demo ? "button" : undefined} class="stick" data-act="stick" aria-label={demo ? "Stick" : undefined}><span></span></Key>
-    {[2, 3, 4, 5].map((i) => (
-      <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === i }]} {...agent(i)} aria-label={demo ? `Agent Key ${i + 1}` : undefined}></Key>
-    ))}
-    <Key type={demo ? "button" : undefined} class="key act" data-act="fast">Fast</Key>
-    <Key type={demo ? "button" : undefined} class="key act" data-act="approve" aria-label={demo ? "Approve" : undefined}>Yes</Key>
-    <Key type={demo ? "button" : undefined} class="key act" data-act="decline" aria-label={demo ? "Decline" : undefined}>No</Key>
-    <Key type={demo ? "button" : undefined} class="key act" data-act="fork">Fork</Key>
-    <Key type={demo ? "button" : undefined} class="touch" data-act="touch" aria-label={demo ? "Touch sensor" : undefined}><span></span></Key>
-    <Key type={demo ? "button" : undefined} class="key act wide" data-act="mic">Mic</Key>
-    <Key type={demo ? "button" : undefined} class="key act" data-act="send">Send</Key>
+  <div class="case">
+    <div class="pad" role="group" aria-label="A drawing of the Codex Micro. The six clear keys light by what each Claude Code session is doing.">
+      <i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i><i class="screw" aria-hidden="true"></i>
+      <Key type={demo ? "button" : undefined} class="dial" data-act="dial" aria-label={label("Dial")}><span></span></Key>
+      <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 0 }]} {...agent(0)} aria-label={label("Agent Key 1")}></Key>
+      <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === 1 }]} {...agent(1)} aria-label={label("Agent Key 2")}></Key>
+      <Key type={demo ? "button" : undefined} class="stick" data-act="stick" aria-label={label("Stick")}><span></span></Key>
+      {[2, 3, 4, 5].map((i) => (
+        <Key type={demo ? "button" : undefined} class:list={["key", { shown: shown === i }]} {...agent(i)} aria-label={label(`Agent Key ${i + 1}`)}></Key>
+      ))}
+      {row3.map(([act, name]) => (
+        <Key type={demo ? "button" : undefined} class="key act" data-act={act} aria-label={label(name)}><Fragment set:html={icon(act)} /></Key>
+      ))}
+      <Key type={demo ? "button" : undefined} class="touch" data-act="touch" aria-label={label("Touch sensor")}><span></span></Key>
+      <Key type={demo ? "button" : undefined} class="key act wide" data-act="mic" aria-label={label("Mic")}><Fragment set:html={icon("mic")} /></Key>
+      <Key type={demo ? "button" : undefined} class="key act" data-act="send" aria-label={label("Codex key (Send)")}><Fragment set:html={icon("send")} /></Key>
+    </div>
   </div>
   {demo && (
     <figcaption class="readout">
-      <span class="say" data-say>A drawing of the pad. Click the keys.</span>
+      <span class="say" data-say>Six keys, six Claude Code sessions. Click any key.</span>
       <button type="button" class="pause" data-pause aria-pressed="false">Pause</button>
     </figcaption>
   )}
@@ -46,6 +68,8 @@ const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" }
   type State = "off" | "idle" | "working" | "needs-you" | "done" | "failed";
   // Made-up sessions for the example.
   const NAMES = ["refactor-auth", "landing-page", "flaky-tests", "api-docs", "billing-fix", "release-notes"];
+  const START: State[] = ["working", "done", "working", "idle", "off", "off"];
+  const RESUME_MS = 8000;
 
   function init(root: HTMLElement) {
     const keys = [...root.querySelectorAll<HTMLElement>("[data-ag]")];
@@ -74,52 +98,56 @@ const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" }
     };
     const key = (i: number) => `Key ${i + 1}, ${NAMES[i]},`;
 
-    // The example: [wait before this step in ms, what happens].
+    // The example: [wait before this step in ms, what happens]. The pad is never all dark.
     const steps: [number, () => void][] = [
-      [500, () => { keys.forEach((_, i) => set(i, "off")); show(null); tell("Six keys. Each one follows a Claude Code session."); }],
-      [1600, () => { set(0, "working"); tell(`${key(0)} is working.`); }],
-      [1200, () => { set(1, "working"); set(2, "working"); tell("Two more sessions start. Each takes the next free key."); }],
+      [400, () => { START.forEach((s, i) => set(i, s)); show(null); tell("Six keys, six Claude Code sessions. Each key lights by what its session is doing."); }],
+      [2200, () => { set(4, "working"); tell("A new session takes the next free key."); }],
       [1900, () => { set(0, "needs-you"); show(0); tell(`${key(0)} needs you: a permission prompt.`); }],
       [2200, () => { press(act("approve")); set(0, "working"); tell("Yes presses “Allow once”. Back to work."); }],
-      [2000, () => { set(1, "done"); tell(`${key(1)} is done, and you have not looked yet.`); }],
-      [1800, () => { set(3, "working"); set(2, "failed"); tell(`${key(2)} failed.`); }],
-      [2300, () => { press(keys[1]); set(1, "idle"); show(1); tell("A tap opens key 2’s session. The key on screen pulses."); }],
-      [2600, () => { set(3, "needs-you"); tell(`${key(3)} asks a question.`); }],
+      [2100, () => { press(keys[1]); set(1, "idle"); show(1); tell("A tap opens key 2’s session and clears its green."); }],
+      [2200, () => { set(2, "failed"); tell(`${key(2)} failed.`); }],
+      [2200, () => { set(3, "needs-you"); show(3); tell(`${key(3)} asks a question.`); }],
       [1500, () => { turnDial(30); tell("Turn the dial to move between the answers,"); }],
       [800, () => turnDial(30)],
       [900, () => { press(act("dial")); set(3, "working"); tell("and press it to pick one."); }],
-      [2100, () => { set(0, "done"); set(4, "working"); tell("A fifth session takes key 5."); }],
+      [2100, () => { set(0, "done"); tell(`${key(0)} is done. Green until you look.`); }],
       [2200, () => { press(keys[2], 700); set(2, "off"); tell("Hold a key to forget its session and free the key."); }],
-      [3200, () => {}],
+      [3000, () => {}],
     ];
 
     let at = 0;
     let timer = 0;
-    let wanted = !reduce;
+    let resume = 0;
+    let paused = reduce; // the Pause button
+    let held = false; // the reader clicked a key: wait, then carry on
+    let visible = true;
+    const sync = () => {
+      clearTimeout(timer);
+      if (!paused && !held && visible && !document.hidden) timer = window.setTimeout(step, 600);
+      pause.textContent = paused ? "Play" : "Pause";
+      pause.setAttribute("aria-pressed", String(paused));
+    };
     const step = () => {
       steps[at][1]();
       at = (at + 1) % steps.length;
       timer = window.setTimeout(step, steps[at][0]);
     };
-    const run = (on: boolean) => {
-      clearTimeout(timer);
-      if (on) timer = window.setTimeout(step, 400);
-      pause.textContent = wanted ? "Pause" : "Play";
-      pause.setAttribute("aria-pressed", String(!wanted));
-    };
-    let visible = true;
-    const sync = () => run(wanted && visible && !document.hidden);
 
     pause.addEventListener("click", () => {
-      wanted = !wanted;
+      paused = !paused;
+      held = false;
+      clearTimeout(resume);
       sync();
     });
-    // The reader took over: stop the example and answer them.
+    // The reader took over: answer them, and carry on with the example once they stop.
     const take = () => {
-      if (wanted) {
-        wanted = false;
+      held = true;
+      sync();
+      clearTimeout(resume);
+      resume = window.setTimeout(() => {
+        held = false;
         sync();
-      }
+      }, RESUME_MS);
     };
 
     keys.forEach((k, i) =>
@@ -127,29 +155,30 @@ const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" }
         take();
         press(k);
         const s = get(i);
-        if (s === "off") return tell("A dark key does nothing. Bind a key to cmd:NEW to start sessions from the pad.");
+        if (s === "off") return tell("No session on this key yet. The next session to start takes it.");
         if (s === "done" || s === "failed") set(i, "idle");
         show(i);
         tell(`A tap shows ${NAMES[i]} in the Claude app.`);
       }),
     );
-    const answer = (name: string, then: (i: number) => void, says: string) =>
+    const answer = (name: string, then: (i: number) => void, says: string, what: string) =>
       act(name).addEventListener("click", () => {
         take();
         press(act(name));
         const i = shownKey();
-        if (i < 0 || get(i) !== "needs-you")
-          return tell(`${says.split(" ")[0]} answers the session on screen, and it is not waiting on you. Tap an amber key first.`);
-        then(i);
-        tell(says);
+        if (i >= 0 && get(i) === "needs-you") {
+          then(i);
+          return tell(says);
+        }
+        tell(what);
       });
-    answer("approve", (i) => set(i, "working"), "Yes presses “Allow once”.");
-    answer("decline", (i) => set(i, "idle"), "No presses “Deny”.");
+    answer("approve", (i) => set(i, "working"), "Yes presses “Allow once”. Back to work.", "Yes presses “Allow once”, or a question card’s Next or Submit.");
+    answer("decline", (i) => set(i, "idle"), "No presses “Deny”.", "No presses “Deny”, or a question card’s Skip.");
     const plain: Record<string, string> = {
       fast: "Fast types /fast into the session on screen.",
       fork: "Fork types /branch, or starts a new chat.",
       mic: "Hold Mic to talk.",
-      send: "Send sends the message.",
+      send: "The Codex key sends the message.",
       stick: "The stick: permission mode, previous and next session, the sidebar. It can scroll what is under the pointer instead.",
       touch: "The touch sensor: taps here pass the pad to ChatGPT and back.",
     };
@@ -172,9 +201,8 @@ const agent = (i: number) => ({ "data-ag": i, "data-state": states[i] ?? "off" }
     document.addEventListener("visibilitychange", sync);
 
     if (reduce) {
-      (["working", "needs-you", "done", "idle", "failed", "off"] as State[]).forEach((s, i) => set(i, s));
-      show(3);
-      tell("A drawing of the pad. Click the keys.");
+      (["working", "needs-you", "done", "idle", "failed", "working"] as State[]).forEach((s, i) => set(i, s));
+      show(1);
     }
     sync();
   }

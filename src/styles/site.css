@@ -340,8 +340,11 @@ h1 em {
 /* ---------- the pad ---------- */
 
 .pad-wrap {
-  --u: clamp(50px, 15vw, 82px);
-  --gap: calc(var(--u) * 0.12);
+  /* The whole pad is about 6 keys wide, so a key is a sixth of the space it gets, at most 76px. */
+  container-type: inline-size;
+  width: 100%;
+  --u: min(76px, calc((100cqi - 4px) / 6));
+  --gap: calc(var(--u) * 0.14);
   --last: var(--l-blue);
   margin: 0;
   display: grid;
@@ -354,30 +357,41 @@ h1 em {
   /* The glow on the desk takes the color of the last light that changed. */
   content: "";
   position: absolute;
-  inset: 4% 6% 18%;
+  inset: 6% 8% 20%;
   border-radius: 40%;
   background: var(--last);
-  filter: blur(70px);
-  opacity: 0.2;
+  filter: blur(80px);
+  opacity: 0.16;
   transition: background 1.2s;
   z-index: -1;
 }
 
+/* The frosted case around the plate. */
+.case {
+  padding: calc(var(--u) * 0.36);
+  border-radius: calc(var(--u) * 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(155deg, #ffffff 0%, #f1f3f4 42%, #dde1e4 100%);
+  box-shadow:
+    inset 0 2px 1px #fff,
+    inset 0 calc(var(--u) * -0.06) calc(var(--u) * 0.16) rgba(0, 0, 0, 0.1),
+    0 calc(var(--u) * 0.5) calc(var(--u) * 1) calc(var(--u) * -0.25) rgba(0, 0, 0, 0.85);
+}
+
+/* The plate: keys in a 4 by 4 grid, a screw in each corner. */
 .pad {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, var(--u));
   grid-auto-rows: var(--u);
   gap: var(--gap);
-  padding: calc(var(--u) * 0.3);
-  border-radius: calc(var(--u) * 0.42);
-  border: 1px solid transparent;
-  background:
-    linear-gradient(135deg, #fafbfa 0%, #e2e6e4 100%) padding-box,
-    linear-gradient(180deg, #f2f4f5 0%, #b9c0c4 100%) border-box;
+  padding: calc(var(--u) * 0.4);
+  border-radius: calc(var(--u) * 0.34);
+  background: linear-gradient(180deg, #eef0f1 0%, #e2e5e7 100%);
   box-shadow:
-    0 calc(var(--u) * 0.5) calc(var(--u) * 1.1) -0.2em rgba(0, 0, 0, 0.7),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.08);
-  transform: perspective(1400px) rotateX(8deg);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.07),
+    inset 0 2px 5px rgba(0, 0, 0, 0.1),
+    0 0 0 calc(var(--u) * 0.05) rgba(255, 255, 255, 0.6);
 }
 
 .pad > * {
@@ -393,20 +407,45 @@ h1 em {
   cursor: pointer;
 }
 
+.screw {
+  position: absolute;
+  width: calc(var(--u) * 0.15);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #5d5f61, #1c1d1e 70%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+.screw:nth-child(1) { top: calc(var(--u) * 0.12); left: calc(var(--u) * 0.12); }
+.screw:nth-child(2) { top: calc(var(--u) * 0.12); right: calc(var(--u) * 0.12); }
+.screw:nth-child(3) { bottom: calc(var(--u) * 0.12); left: calc(var(--u) * 0.12); }
+.screw:nth-child(4) { bottom: calc(var(--u) * 0.12); right: calc(var(--u) * 0.12); }
+
 .key {
+  position: relative;
   display: grid;
   place-items: center;
-  border-radius: calc(var(--u) * 0.2);
-  border: 1px solid #c7cdca;
-  background: linear-gradient(180deg, #eef1ef 0%, #d6dbd9 100%);
-  box-shadow: 0 2px 0 #b3b9b6, inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  font: 600 calc(var(--u) * 0.17) / 1 var(--sans);
-  color: #3d403e;
-  transition: transform 0.12s, box-shadow 0.12s, background 0.35s, border-color 0.35s;
+  border-radius: calc(var(--u) * 0.22);
+  color: #2a2b2d;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.35s;
 }
 
 .key.wide {
   grid-column: span 2;
+}
+
+.key svg {
+  width: calc(var(--u) * 0.34);
+  height: auto;
+}
+
+/* White command keys with a line icon. */
+.key.act {
+  border: 1px solid #d5d8db;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f5f6 65%, #e8eaec 100%);
+  box-shadow:
+    0 calc(var(--u) * 0.05) 0 #cbcfd2,
+    0 calc(var(--u) * 0.08) calc(var(--u) * 0.14) rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 #fff;
 }
 
 .key.down,
@@ -416,17 +455,34 @@ h1 em {
   transform: translateY(2px) scale(0.96);
 }
 
-.key.down {
-  box-shadow: 0 0 0 #b3b9b6;
+.key.act.down {
+  box-shadow: 0 0 0 #cbcfd2, 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
+/* Clear Agent Keys with a light under each. */
 .key[data-ag] {
-  border-color: rgba(255, 255, 255, 0.95);
-  background: linear-gradient(180deg, #dfe3e1 0%, #c5cac8 100%);
+  --glow: #9aa1c9;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.62) 0%, rgba(212, 217, 225, 0.55) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(140, 150, 170, 0.14),
+    inset 0 calc(var(--u) * -0.08) calc(var(--u) * 0.12) rgba(110, 120, 145, 0.12),
+    0 calc(var(--u) * 0.04) calc(var(--u) * 0.1) rgba(0, 0, 0, 0.12);
+}
+
+.key[data-ag]::before {
+  content: "";
+  width: calc(var(--u) * 0.34);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--glow);
+  filter: blur(calc(var(--u) * 0.06));
+  opacity: 0.35;
+  transition: background 0.35s, opacity 0.35s, box-shadow 0.35s;
 }
 
 .key[data-state="idle"] {
-  --glow: var(--l-white);
+  --glow: #fff;
 }
 .key[data-state="working"] {
   --glow: var(--l-blue);
@@ -442,14 +498,33 @@ h1 em {
 }
 
 .key[data-ag]:not([data-state="off"]) {
-  background: radial-gradient(circle at 50% 50%, #fff 0%, var(--glow) 28%, color-mix(in srgb, var(--glow) 38%, #dfe3e1) 80%);
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in srgb, var(--glow) 60%, #fff) 0%,
+    color-mix(in srgb, var(--glow) 24%, rgba(255, 255, 255, 0.8)) 55%,
+    rgba(226, 230, 236, 0.75) 100%
+  );
   box-shadow:
-    0 2px 0 #b3b9b6,
-    0 0 calc(var(--u) * 0.45) color-mix(in srgb, var(--glow) 60%, transparent);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 calc(var(--u) * 0.42) color-mix(in srgb, var(--glow) 55%, transparent),
+    0 calc(var(--u) * 0.04) calc(var(--u) * 0.1) rgba(0, 0, 0, 0.12);
 }
 
+.key[data-ag]:not([data-state="off"])::before {
+  opacity: 1;
+  box-shadow: 0 0 calc(var(--u) * 0.3) var(--glow);
+}
+
+/* White light on a white key: show it as a bright cap with a lavender light, as on the pad. */
+.key[data-state="idle"]::before {
+  background: #b7bde4;
+}
 .key[data-state="idle"] {
-  background: radial-gradient(circle at 50% 50%, #fff 0%, #f6f4ee 40%, #dcdfdc 85%);
+  background: radial-gradient(circle at 50% 50%, #fff 0%, #fff 50%, rgba(236, 239, 245, 0.95) 100%);
+  box-shadow:
+    inset 0 0 0 1px #fff,
+    0 0 calc(var(--u) * 0.4) rgba(255, 255, 255, 0.9),
+    0 calc(var(--u) * 0.04) calc(var(--u) * 0.1) rgba(0, 0, 0, 0.12);
 }
 
 .key.shown {
@@ -458,7 +533,7 @@ h1 em {
 
 @keyframes breathe {
   50% {
-    filter: saturate(0.5) brightness(0.88);
+    filter: saturate(0.55) brightness(0.9);
   }
 }
 
@@ -471,52 +546,46 @@ h1 em {
   border: 0;
 }
 
+/* The dial: a white knob whose top is cut on a slant. */
 .dial span {
-  position: relative;
-  width: calc(var(--u) * 0.96);
+  width: calc(var(--u) * 0.92);
   aspect-ratio: 1;
   border-radius: 50%;
-  background:
-    repeating-conic-gradient(from 0deg, rgba(0, 0, 0, 0.09) 0deg 2deg, transparent 2deg 8deg),
-    radial-gradient(circle at 40% 34%, #fff 0%, #dde1df 58%, #b9bebc 100%);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.22), inset 0 -2px 3px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(135deg, #ffffff 0%, #f6f7f8 45%, #c3c8cd 47%, #dde1e5 62%, #eef0f2 100%);
+  box-shadow:
+    0 calc(var(--u) * 0.06) calc(var(--u) * 0.12) rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.08);
   transition: transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
-.dial span::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 14%;
-  width: 3px;
-  height: 18%;
-  margin-left: -1.5px;
-  border-radius: 2px;
-  background: #2b2c2b;
-}
-
+/* The stick: a black cap in a dashed square. */
 .stick {
-  margin: 4%;
-  border-radius: calc(var(--u) * 0.18);
-  background: #cfd4d2;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18);
+  margin: 7%;
+  border-radius: calc(var(--u) * 0.16);
+  border: 1.5px dashed #2f3133;
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .stick span {
-  width: calc(var(--u) * 0.66);
+  width: calc(var(--u) * 0.62);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #4d4d4d, #070707 70%);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.45);
+  background: radial-gradient(circle at 38% 30%, #4a4b4d, #0b0b0c 68%);
+  box-shadow: 0 calc(var(--u) * 0.05) calc(var(--u) * 0.1) rgba(0, 0, 0, 0.45);
   transition: transform 0.12s;
 }
 
+/* The touch sensor: a flat black circle in a white ring. */
 .touch span {
-  width: calc(var(--u) * 0.5);
+  width: calc(var(--u) * 0.44);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #3d3d3d, #050505 70%);
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4);
+  background: radial-gradient(circle at 40% 35%, #2b2b2d, #050505 70%);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.07) #f7f8f9,
+    0 0 0 calc(var(--u) * 0.07 + 1px) #cfd3d6,
+    0 calc(var(--u) * 0.04) calc(var(--u) * 0.1) rgba(0, 0, 0, 0.2);
   transition: transform 0.12s;
 }
 
